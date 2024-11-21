@@ -81,6 +81,12 @@ async function addIngredient(
 
   if (!recipe) return null;
 
+  const isNameAlreadyUsed = await prisma.ingredient.findMany({
+    where: { recipeId, name: ingredientInfo.name },
+  });
+
+  if (isNameAlreadyUsed) return null;
+
   const newTotalCost =
     ingredientInfo.pricePerKg * ingredientInfo.quantity + recipe.total;
 
