@@ -1,31 +1,38 @@
 import { Recipe } from "../models";
 import { prisma } from "../utils/prisma";
 
+// TODO Error handling
+
 // Return all recipes without ingredients
-async function getAllRecipes(): Promise<Partial<Recipe>[]> {
+async function getAllRecipes(): Promise<Partial<Recipe>[] | null> {
   const recipes: Partial<Recipe>[] = await prisma.recipe.findMany();
+
+  if (!recipes) return null;
+
   return recipes;
 }
 
 // Return specific recipe with all ingredients
-async function getRecipe(recipeId: string): Promise<Recipe> {
+async function getRecipe(recipeId: string): Promise<Recipe | null> {
   const recipe = await prisma.recipe.findUnique({
     where: { id: recipeId },
     include: { ingredients: true },
   });
 
-  if (!recipe) throw new Error("Recipe not found.");
+  if (!recipe) return null;
 
   return recipe as Recipe;
 }
 
 // Returns the created recipe without ingredients
-async function createRecipe(recipeInfo: { name: string }): Promise<Recipe> {
+async function createRecipe(recipeInfo: {
+  name: string;
+}): Promise<Recipe | null> {
   const isNameAlreadyUsed = await prisma.recipe.findFirst({
     where: { name: recipeInfo.name },
   });
 
-  if (isNameAlreadyUsed) throw new Error("Recipe already exists.");
+  if (isNameAlreadyUsed) return null;
 
   const recipe = await prisma.recipe.create({
     data: {
@@ -34,18 +41,18 @@ async function createRecipe(recipeInfo: { name: string }): Promise<Recipe> {
     },
   });
 
-  if (!recipe) throw new Error("Couldn't create recipe.");
+  if (!recipe) return null;
 
   return recipe as Recipe;
 }
 
 // Return the deleted recipe's name
-async function deleteRecipe(recipeId: string): Promise<string> {
+async function deleteRecipe(recipeId: string): Promise<string | null> {
   const recipe = await prisma.recipe.findUnique({
     where: { id: recipeId },
   });
 
-  if (!recipe) throw new Error("Couldn't find recipe.");
+  if (!recipe) return null;
 
   const result = await prisma.$transaction([
     prisma.ingredient.deleteMany({
@@ -56,7 +63,7 @@ async function deleteRecipe(recipeId: string): Promise<string> {
     }),
   ]);
 
-  if (!result) throw new Error("Couldn't delete recipe.");
+  if (!result) return null;
 
   const [_, deletedRecipe] = result;
 
@@ -67,12 +74,12 @@ async function deleteRecipe(recipeId: string): Promise<string> {
 async function addIngredient(
   recipeId: string,
   ingredientInfo: { name: string; quantity: number; pricePerKg: number }
-): Promise<Recipe> {
+): Promise<Recipe | null> {
   const recipe = await prisma.recipe.findUnique({
     where: { id: recipeId },
   });
 
-  if (!recipe) throw new Error("Couldn't find recipe.");
+  if (!recipe) return null;
 
   const newTotalCost =
     ingredientInfo.pricePerKg * ingredientInfo.quantity + recipe.total;
@@ -94,7 +101,7 @@ async function addIngredient(
     },
   });
 
-  if (!updatedRecipe) throw new Error("Couldn't add ingredient to recipe.");
+  if (!updatedRecipe) return null;
 
   return updatedRecipe as Recipe;
 }
@@ -103,12 +110,12 @@ async function addIngredient(
 async function removeIngredent(
   recipeId: string,
   ingredientId: string
-): Promise<Recipe> {
+): Promise<Recipe | null> {
   const recipe = await prisma.recipe.findUnique({
     where: { id: recipeId },
   });
 
-  if (!recipe) throw new Error("Coudn't find recipe.");
+  if (!recipe) return null;
 
   const ingredient = await prisma.ingredient.findFirst({
     where: {
@@ -117,7 +124,7 @@ async function removeIngredent(
     },
   });
 
-  if (!ingredient) throw new Error("Couldn't find ingredient.");
+  if (!ingredient) return null;
 
   const newTotalCost =
     recipe.total - ingredient.quantity * ingredient.pricePerKg;
@@ -137,7 +144,7 @@ async function removeIngredent(
     }),
   ]);
 
-  if (!result) throw new Error("Couldn't remove ingredient from recipe.");
+  if (!result) return null;
 
   const [_, updatedRecipe] = result;
 
