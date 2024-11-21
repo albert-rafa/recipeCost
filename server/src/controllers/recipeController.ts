@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { recipeServices } from "../services/recipeServices";
+import { recipeServices } from "../services";
 import { Recipe } from "../models";
 
 // TODO Request validation

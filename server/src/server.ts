@@ -1,6 +1,6 @@
 import express from "express";
 
-import recipeRouter from "./routes/recipeRoutes";
+import { recipeRouter } from "./routes";
 
 const PORT = 3333;
 const app = express();
