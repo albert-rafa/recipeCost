@@ -73,7 +73,9 @@ async function deleteRecipe(recipeId: string): Promise<string | null> {
 // Return the recipe with updated cost and all ingredients, including the added one
 async function addIngredient(
   recipeId: string,
-  ingredientInfo: { name: string; quantity: number; pricePerKg: number }
+  ingredientName: string,
+  ingredientQuantity: number,
+  ingredientPrice: number
 ): Promise<Recipe | null> {
   const recipe = await prisma.recipe.findUnique({
     where: { id: recipeId },
@@ -81,14 +83,13 @@ async function addIngredient(
 
   if (!recipe) return null;
 
-  const isNameAlreadyUsed = await prisma.ingredient.findMany({
-    where: { recipeId, name: ingredientInfo.name },
+  const isNameAlreadyUsed = await prisma.ingredient.findFirst({
+    where: { recipeId, name: ingredientName },
   });
 
   if (isNameAlreadyUsed) return null;
 
-  const newTotalCost =
-    ingredientInfo.pricePerKg * ingredientInfo.quantity + recipe.total;
+  const newTotalCost = ingredientPrice * ingredientQuantity + recipe.total;
 
   const updatedRecipe = await prisma.recipe.update({
     where: { id: recipeId },
@@ -96,9 +97,9 @@ async function addIngredient(
       total: newTotalCost,
       ingredients: {
         create: {
-          name: ingredientInfo.name,
-          quantity: ingredientInfo.quantity,
-          pricePerKg: ingredientInfo.pricePerKg,
+          name: ingredientName,
+          quantity: ingredientQuantity,
+          pricePerKg: ingredientPrice,
         },
       },
     },

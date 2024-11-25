@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 
 import { recipeServices } from "../services";
-import { Recipe } from "../models";
+import { Ingredient, Recipe } from "../models";
 
-// TODO Request data validation
+interface IngredientType
+  extends Pick<Ingredient, "name" | "quantity" | "pricePerKg"> {}
 
 async function getAllRecipes(
   request: Request,
@@ -20,10 +21,7 @@ async function getAllRecipes(
   return response.status(200).send({ recipes });
 }
 
-async function getRecipe(
-  request: Request,
-  response: Response
-): Promise<any> {
+async function getRecipe(request: Request, response: Response): Promise<any> {
   const { recipeId } = request.params;
 
   const recipe: Recipe | null = await recipeServices.getRecipe(recipeId);
@@ -78,17 +76,14 @@ async function addIngredient(
   response: Response
 ): Promise<any> {
   const { recipeId } = request.params;
-  const ingredientInfo = request.body;
+  const ingredientInfo: IngredientType = request.body;
 
-  const name: string = ingredientInfo.name;
-  const quantity: number = parseFloat(ingredientInfo.quantity);
-  const pricePerKg: number = parseFloat(ingredientInfo.pricePerKg);
-
-  const recipe: Recipe | null = await recipeServices.addIngredient(recipeId, {
-    name,
-    quantity,
-    pricePerKg,
-  });
+  const recipe: Recipe | null = await recipeServices.addIngredient(
+    recipeId,
+    ingredientInfo.name,
+    Number(ingredientInfo.quantity),
+    Number(ingredientInfo.pricePerKg)
+  );
 
   if (!recipe) {
     return response
