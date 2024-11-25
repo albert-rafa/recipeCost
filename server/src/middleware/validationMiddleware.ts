@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { AnyZodObject, ZodError, Schema } from "zod";
+import { ZodError, Schema } from "zod";
 
-function params(schema: AnyZodObject) {
+function params(schema: Schema) {
   return (request: Request, response: Response, next: NextFunction): any => {
     try {
       schema.parse(request.params);
@@ -16,7 +16,7 @@ function params(schema: AnyZodObject) {
   };
 }
 
-function body(schema: AnyZodObject) {
+function body(schema: Schema) {
   return (request: Request, response: Response, next: NextFunction): any => {
     try {
       schema.parse(request.body);
@@ -30,6 +30,5 @@ function body(schema: AnyZodObject) {
     }
   };
 }
-
 
 export { params, body };
