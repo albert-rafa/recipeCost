@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
 import { recipeServices } from "../services";
 import { Ingredient, Recipe } from "../models";
@@ -8,110 +8,116 @@ interface IngredientType
 
 async function getAllRecipes(
   request: Request,
-  response: Response
+  response: Response,
+  next: NextFunction
 ): Promise<any> {
-  const recipes = await recipeServices.getAllRecipes();
+  try {
+    const recipes: Partial<Recipe>[] | undefined =
+      await recipeServices.getAllRecipes(next);
 
-  if (!recipes) {
-    return response
-      .status(500)
-      .send({ message: "Erro na requisição das receitas." });
+    if (recipes) return response.status(200).send({ recipes });
+  } catch (error) {
+    next(error);
   }
-
-  return response.status(200).send({ recipes });
 }
 
-async function getRecipe(request: Request, response: Response): Promise<any> {
+async function getRecipe(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<any> {
   const { recipeId } = request.params;
 
-  const recipe: Recipe | null = await recipeServices.getRecipe(recipeId);
+  try {
+    const recipe: Recipe | undefined = await recipeServices.getRecipe(
+      recipeId,
+      next
+    );
 
-  if (!recipe) {
-    return response
-      .status(500)
-      .send({ message: "Erro na requisição da receita." });
+    if (recipe) return response.status(200).send(recipe);
+  } catch (error) {
+    next(error);
   }
-
-  return response.status(200).send(recipe);
 }
 
 async function createRecipe(
   request: Request,
-  response: Response
+  response: Response,
+  next: NextFunction
 ): Promise<any> {
   const recipeInfo = request.body;
 
-  const recipe: Recipe | null = await recipeServices.createRecipe(recipeInfo);
+  try {
+    const recipe: Recipe | undefined = await recipeServices.createRecipe(
+      recipeInfo.name,
+      next
+    );
 
-  if (!recipe) {
-    return response
-      .status(500)
-      .send({ message: "Erro na criação da receita." });
+    if (recipe) return response.status(201).send({ recipe });
+  } catch (error) {
+    next(error);
   }
-
-  return response.status(201).send({ recipe });
 }
 
 async function deleteRecipe(
   request: Request,
-  response: Response
+  response: Response,
+  next: NextFunction
 ): Promise<any> {
   const { recipeId } = request.params;
 
-  const deletedRecipeName: string | null = await recipeServices.deleteRecipe(
-    recipeId
-  );
+  try {
+    const deletedRecipeName: string | undefined =
+      await recipeServices.deleteRecipe(recipeId, next);
 
-  if (!deletedRecipeName) {
-    return response
-      .status(500)
-      .send({ message: "Erro ao tentar deletar a receita." });
+    if (deletedRecipeName)
+      return response.status(200).send({ deletedRecipe: deletedRecipeName });
+  } catch (error) {
+    next(error);
   }
-
-  return response.status(200).send({ deletedRecipe: deletedRecipeName });
 }
 
 async function addIngredient(
   request: Request,
-  response: Response
+  response: Response,
+  next: NextFunction
 ): Promise<any> {
   const { recipeId } = request.params;
   const ingredientInfo: IngredientType = request.body;
 
-  const recipe: Recipe | null = await recipeServices.addIngredient(
-    recipeId,
-    ingredientInfo.name,
-    Number(ingredientInfo.quantity),
-    Number(ingredientInfo.pricePerKg)
-  );
+  try {
+    const recipe: Recipe | undefined = await recipeServices.addIngredient(
+      recipeId,
+      ingredientInfo.name,
+      Number(ingredientInfo.quantity),
+      Number(ingredientInfo.pricePerKg),
+      next
+    );
 
-  if (!recipe) {
-    return response
-      .status(500)
-      .send({ message: "Erro ao tentar adicionar o ingrediente." });
+    if (recipe) return response.status(201).send({ recipe });
+  } catch (error) {
+    next(error);
   }
-
-  return response.status(201).send({ recipe });
 }
 
 async function removeIngredient(
   request: Request,
-  response: Response
+  response: Response,
+  next: NextFunction
 ): Promise<any> {
   const { recipeId, ingredientId } = request.params;
 
-  const recipe: Recipe | null = await recipeServices.removeIngredent(
-    recipeId,
-    ingredientId
-  );
+  try {
+    const recipe: Recipe | undefined = await recipeServices.removeIngredent(
+      recipeId,
+      ingredientId,
+      next
+    );
 
-  if (!recipe) {
-    return response
-      .status(500)
-      .send({ message: "Erro na remoção do ingrediente da receita." });
+    if (recipe) return response.status(200).send({ recipe });
+  } catch (error) {
+    next(error);
   }
-
-  return response.status(200).send({ recipe });
 }
 
 export const recipeController = {
