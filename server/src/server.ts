@@ -10,6 +10,7 @@ app.use("/recipe", recipeRouter);
 
 app.get("/ping", (_, response) => {
   response.status(200).send("pong");
+  return;
 });
 
 app.listen(PORT, () => {
